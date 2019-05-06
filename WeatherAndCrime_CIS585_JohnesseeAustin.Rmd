@@ -1,0 +1,335 @@
+---
+title: 'Weather and Crime: Chicago 2015'
+author: "Austin Johnessee"
+date: "5/5/2019"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+## Abstract
+
+It has been known that temperature differences have an affect on crime rates. With increased temperature in summers, criminal activity rises in response, and in winters, criminal activity decreases instead. What has not been looked at is the effect that other environmental factors have on criminal activity. This study aims to resolve this issue by using regression analysis to see what effect weather has on criminal activity. It was found that only day length and temperature have an effect individually, but that when all factors are considered, there was a relationship between weather conditions and crime.
+
+## Introduction 
+
+Public safety professionals and researchers believe that trends in criminal activity are rooted with human factors. When asked, criminals often cite issues with their lives that led to them breaking the law. Whether it was wanting to fit in with a group at school that saw a high-schooler vandalize a building or a lack of money that resulted in a theft of a friend's jewelry collection, the reason always lied with the human side. No one has said they commited a crime because it was too cold or it was a nice day.
+
+Recent studies have shown, however, that weather does play a role in criminal activity. Across the world, researchers have found that in cities especially, crime increases in the summer and decreases in the summer. When plotted against temperature, it was found that crime held a relationship with temperature. On a warm day, even in the winter, crime went up. On cold days, even in summer, crime went down. Even law-breakers do not want to be uncomfortable while they do their work. 
+
+This study aims to expand on the temperature studies and identify what other weather conditions might play a role. In Chicago and most other areas, previous studies did not look into other factors besides temperature, which while playing a major role, it is not the only condition that can have an effect. Other conditions that may play a role are snowfall, precipiation, cloudiness, visibility, and even the length of day. Anything that might discomfort a human enough that they stay indoors or enjoy a lazy day need to be considered.
+
+## Literature Review
+
+The Chicago Tribune, the largest news organization in the city, used the publicly available crime information provided by the Chicago Police Department to conduct a study on crime and temperature. For a period of five years, they compared temperature and crime, finding that crime increased in activity rate as summer came around and winter went away, reversing the trend along with the temperature as winter hit. However, the study did not go further and different types of crime were not looked at. 
+
+In Greece, researchers found that not only did crime increase with temperature, but that homicide followed the main trend as well. This study looked at the central and northern portions of the country, through the years 1995-2004. While the researchers (Mavroudeas, et. al) did find a trend with homicides, the country only recorded a total of 137 homicides over the years. In 2015 alone, the city of Chicago saw 475 homicides, suggesting that for an American urban area, such a study may not be reflect accurately.
+
+## Theory
+
+Going into the project with the review of previous literature, it was felt that certain weather conditions would play a role in crime, while others would not. Extreme conditions like snow and fog would affect, while wind and rain. Chicago, being a norther city on the coast of a Great Lake, is certainly used to high winds and pouring rain, but even a city used to adverse weather would see a relaxation when snow covered the ground and visibility was low. Other factors looked at were tornadoes, hail, storm events, and sun. 
+
+It was also felt that since temperature had been shown to have a relationship, that conditions that followed the same trend as temperature would also see a similar relationship. These factors included daylength and sunlight, both of which increase as summer approaches and decreases as it wanes. 
+
+## Data
+
+Chicago crime data for 2015 originated from the Chicago Data Portal at https://data.cityofchicago.org/Public-Safety/Crimes-2015/vwwp-7yr9.
+
+Chicago weather data for 2015 was sourced from the National Oceanic and Atmoshperic Administration at https://www.ncdc.noaa.gov/cdo-web/. 
+
+```{r,include=FALSE}
+Data2015 <- read.csv("2015Data.csv",header=TRUE)
+```
+
+```{r}
+head(Data2015)
+```
+
+## Methodology
+
+The first steps of the project was cleaning and combining the two datasets. Both the crime and weather tables were ackward read and understand, so using Microsoft Excel, the headers were changed to something more understandable. Daily totals for all crimes, arsons, burglaries, deceptive practices, and homicides were calculated, followed by crimes that happened during the day and crimes that happened at night. For weather, temperatures were averaged for each day and a binary system was used to identify days that saw snow, rain, high winds, and other weather conditions. 
+
+After tidying the data, it was brought into R. At this point, it was decided to graph crimes across the year and to see what monthly trends showed. 
+
+```{r,include=FALSE}
+##Summarize Monthly Crimes
+julian_dayBegin <- c(1,32,60,91,121,152,182,213,244,274,305,335)
+julian_dayEnd <- c(31,59,90,120,151,181,212,243,273,304,334,365)
+month <- c(1:12)
+monthCrimeSum <- array(NA,c(12))
+monthArsonSum <- array(NA,c(12))
+monthBurglarySum <- array(NA,c(12))
+monthDeceptivePracticeSum <- array(NA,c(12))
+monthHomicideSum <- array(NA,c(12))
+monthDaySum <- array(NA,c(12))
+monthNightSum <- array(NA,c(12))
+for(i in 1:length(julian_dayBegin)) {
+  monthCrimeSum[i] <- sum(Data2015$DateTotal[julian_dayBegin[i]:julian_dayEnd[i]])
+  monthHomicideSum[i] <- sum(Data2015$HomicideTotal[julian_dayBegin[i]:julian_dayEnd[i]])
+  monthArsonSum[i] <- sum(Data2015$ArsonTotal[julian_dayBegin[i]:julian_dayEnd[i]])
+  monthBurglarySum[i] <- sum(Data2015$BurglaryTotal[julian_dayBegin[i]:julian_dayEnd[i]])
+  monthDeceptivePracticeSum[i] <- sum(Data2015$DeceptivePracticeTotal[julian_dayBegin[i]:julian_dayEnd[i]])
+  monthDaySum[i] <- sum(Data2015$DayTotal[julian_dayBegin[i]:julian_dayEnd[i]])
+  monthNightSum[i] <- sum(Data2015$NightTotal[julian_dayBegin[i]:julian_dayEnd[i]])
+}
+```
+
+```{r, echo=FALSE}
+plot(Data2015$Date,Data2015$DateTotal,main="Overview of 2015 Crimes",
+     xlab="Date",ylab="Total")
+plot(month,monthCrimeSum,main="Monthly Totals",xlab="Months",ylab="Totals")
+```
+
+After graphing, a clear trend was shown across the year, with crime increasing in the summer months and decreasing during the winter, with the lowest amount being in February. Seeing such a trend, it was clear that weather conditions had a relationship with criminal activity, it was only a question of what conditions and how much of a connection was there. 
+
+```{r}
+##Average Monthly Crimes
+monthCrimeMean <- array(NA,c(12))
+monthArsonMean <- array(NA,c(12))
+monthBurglaryMean <- array(NA,c(12))
+monthDeceptivePracticeMean <- array(NA,c(12))
+monthHomicideMean <- array(NA,c(12))
+monthDayMean <- array(NA,c(12))
+monthNightMean <- array(NA,c(12))
+for(j in 1:length(julian_dayBegin)) {
+  monthCrimeMean[j] <- mean(Data2015$DateTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+  monthArsonMean[j] <- mean(Data2015$ArsonTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+  monthBurglaryMean[j] <- mean(Data2015$BurglaryTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+  monthDeceptivePracticeMean[j] <- mean(Data2015$DeceptivePracticeTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+  monthHomicideMean[j] <- mean(Data2015$HomicideTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+  monthDayMean[j] <- mean(Data2015$DayTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+  monthNightMean[j] <- mean(Data2015$NightTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+}
+```
+
+```{r}
+##Average Monthly Weather Conditions
+monthAvgTempMean <- array(NA,c(12))
+monthMaxTempMean <- array(NA,c(12))
+monthMinTempMean <- array(NA,c(12))
+monthPrecipAmountMean <- array(NA,c(12))
+monthSnowAmountMean <- array(NA,c(12))
+monthWindSpeedMean <- array(NA,c(12))
+monthFogMean <- array(NA,c(12))
+monthHeavyFogMean <- array(NA,c(12))
+monthThunderMean <- array(NA,c(12))
+monthSleetMean <- array(NA,c(12))
+monthHailMean <- array(NA,c(12))
+monthGlazeMean <- array(NA,c(12))
+monthHazeMean <- array(NA,c(12))
+monthSnowMean <- array(NA,c(12))
+monthSunnyMean <- array(NA,c(12))
+monthWeatherMean <- array(NA,c(12))
+monthDayLengthMean <- array(NA,c(12))
+for(k in 1:length(julian_dayBegin)) {
+  monthAvgTempMean[k] <- mean(Data2015$Temp_Avg.oF.[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthMaxTempMean[k] <- mean(Data2015$Temp_Max.oF.[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthMinTempMean[k] <- mean(Data2015$Temp_Min.oF.[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthPrecipAmountMean[k] <- mean(Data2015$Precip.in.[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthSnowAmountMean[k] <- mean(Data2015$Snow.in.[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthWindSpeedMean[k] <- mean(Data2015$Wind.mph.[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthFogMean[k] <- mean(Data2015$Fog[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthHeavyFogMean[k] <- mean(Data2015$HeavyFog[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthThunderMean[k] <- mean(Data2015$Thunder[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthSleetMean[k] <- mean(Data2015$Sleet[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthHailMean[k] <- mean(Data2015$Hail[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthGlazeMean[k] <- mean(Data2015$Glaze[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthHazeMean[k] <- mean(Data2015$Haze[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthSnowMean[k] <- mean(Data2015$Snow[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthSunnyMean[k] <- mean(Data2015$Sunny[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthWeatherMean[k] <- mean(Data2015$Weather[julian_dayBegin[k]:julian_dayEnd[k]])
+  monthDayLengthMean[k] <- mean(Data2015$DayLengthPercent[julian_dayBegin[k]:julian_dayEnd[k]])
+}
+```
+
+```{r,echo=FALSE}
+##Plot Monthly Average for All Crimes
+plot(month,monthCrimeMean,main="Monthly Averages",xlab="Months",ylab="")
+
+##Plot Monthly Averages for Crime Categories
+par(mfrow=c(3,3),mar=c(4,5,3,1),cex.lab=1.8)
+
+##Plot Monthly Arson Averages
+plot(month,monthArsonMean,main="Arson",xlab="Months",ylab="")
+
+##Plot Monthly Burglary Averages
+plot(month,monthBurglaryMean,main="Burglary",xlab="Months",ylab="")
+
+##Plot Monthly Deceptive Practice Averages
+plot(month,monthDeceptivePracticeMean,main="Deceptive Practice",xlab="Months",ylab="")
+
+##Plot Homicde Monthly Averages
+plot(month,monthHomicideMean,main="Homicide",xlab="Months",ylab="")
+
+##Plot Day Crime Monthly Averages
+plot(month,monthDayMean,main="Day",xlab="Months",ylab="")
+
+##Plot Night Crime Monthly Averages
+plot(month,monthNightMean,main="Night",xlab="Months",ylab="")
+```
+
+Seeing the seasonal trend continue with some variations, such as Deceptive Practice seeing spikes in the spring and fall before dropping for summer and winter or the Daytime and Nighttime totals flip-flopping across seasons, it was time to which conditions had the most effect on crime. For the first set of linear and multiple regression analyses, monthly averages were used. 
+
+```{r}
+##Average Monthly Crimes
+monthCrimeMean <- array(NA,c(12))
+monthArsonMean <- array(NA,c(12))
+monthBurglaryMean <- array(NA,c(12))
+monthDeceptivePracticeMean <- array(NA,c(12))
+monthHomicideMean <- array(NA,c(12))
+monthDayMean <- array(NA,c(12))
+monthNightMean <- array(NA,c(12))
+for(j in 1:length(julian_dayBegin)) {
+  monthCrimeMean[j] <- mean(Data2015$DateTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+  monthArsonMean[j] <- mean(Data2015$ArsonTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+  monthBurglaryMean[j] <- mean(Data2015$BurglaryTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+  monthDeceptivePracticeMean[j] <- mean(Data2015$DeceptivePracticeTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+  monthHomicideMean[j] <- mean(Data2015$HomicideTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+  monthDayMean[j] <- mean(Data2015$DayTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+  monthNightMean[j] <- mean(Data2015$NightTotal[julian_dayBegin[j]:julian_dayEnd[j]])
+}
+```
+
+These monthly averages were then used for linear and multiple regression analyses. Each average was used independently first, then daylength and temperature measurements were used together. Lastly, all weather variables were used in a multiple regression, with temperature measurements alternating between average, maximum, and minimum. After doing regression on the monthly averages, the same was done for the daily values. 
+
+```{r}
+##Monthly Averages
+sumRegAnalAllCrimeDayLengthMonth <- summary(lm(monthDayLengthMean~monthCrimeMean))
+sumRegAnalAllCrimeMaxTempMonth <- summary(lm(monthMaxTempMean~monthCrimeMean))
+sumRegAnalAllCrimeAvgTempMonth <- summary(lm(monthAvgTempMean~monthCrimeMean))
+sumRegAnalAllCrimeMinTempMonth <- summary(lm(monthMinTempMean~monthCrimeMean))
+sumRegAnalAllCrimePrecipAmountMonth <- summary(lm(monthPrecipAmountMean~monthCrimeMean))
+sumRegAnalAllCrimeSnowAmountMonth <- summary(lm(monthSnowAmountMean~monthCrimeMean))
+sumRegAnalAllCrimeWindSpeedMonth <- summary(lm(monthWindSpeedMean~monthCrimeMean))
+sumRegAnalAllCrimeFogMonth <- summary(lm(monthFogMean~monthCrimeMean))
+sumRegAnalAllCrimeHeavyFogMonth <- summary(lm(monthHeavyFogMean~monthCrimeMean))
+sumRegAnalAllCrimeThunderMonth <- summary(lm(monthThunderMean~monthCrimeMean))
+sumRegAnalAllCrimeSleetMonth <- summary(lm(monthSleetMean~monthCrimeMean))
+sumRegAnalAllCrimeHailMonth <- summary(lm(monthHailMean~monthCrimeMean))
+sumRegAnalAllCrimeGlazeMonth <- summary(lm(monthGlazeMean~monthCrimeMean))
+sumRegAnalAllCrimeHazeMonth <- summary(lm(monthHazeMean~monthCrimeMean))
+sumRegAnalAllCrimeHazeMonth <- summary(lm(monthHazeMean~monthCrimeMean))
+sumRegAnalAllCrimeSunnyMonth <- summary(lm(monthSunnyMean~monthCrimeMean))
+sumRegAnalAllCrimeWeatherMonth <- summary(lm(monthWeatherMean~monthCrimeMean))
+sumRegAnalAllCrimeDayMaxSunnyMonth <- summary(lm(monthDayLengthMean+monthMaxTempMean+monthSunnyMean~monthCrimeMean))
+sumRegAnalAllCrimeDayAvgSunnyMonth <- summary(lm(monthDayLengthMean+monthAvgTempMean+monthSunnyMean~monthCrimeMean))
+sumRegAnalAllCrimeDayMinSunnyMonth <- summary(lm(monthDayLengthMean+monthMinTempMean+monthSunnyMean~monthCrimeMean))
+sumRegAnalAllCrimeAllWeatherMaxTempMonth <- summary(lm(monthDayLengthMean+monthMaxTempMean+monthSunnyMean+monthSnowAmountMean+monthSnowMean+
+                                                         monthHailMean+monthHazeMean+monthGlazeMean+monthSleetMean+monthWindSpeedMean+
+                                                         monthFogMean+monthHeavyFogMean+monthPrecipAmountMean+monthThunderMean+monthWeatherMean~monthCrimeMean))
+sumRegAnalAllCrimeAllWeatherAvgTempMonth <- summary(lm(monthDayLengthMean+monthAvgTempMean+monthSunnyMean+monthSnowAmountMean+monthSnowMean+
+                                                         monthHailMean+monthHazeMean+monthGlazeMean+monthSleetMean+monthWindSpeedMean+
+                                                         monthFogMean+monthHeavyFogMean+monthPrecipAmountMean+monthThunderMean+monthWeatherMean~monthCrimeMean))
+sumRegAnalAllCrimeAllWeatherMinTempMonth <- summary(lm(monthDayLengthMean+monthMinTempMean+monthSunnyMean+monthSnowAmountMean+monthSnowMean+
+                                                         monthHailMean+monthHazeMean+monthGlazeMean+monthSleetMean+monthWindSpeedMean+
+                                                         monthFogMean+monthHeavyFogMean+monthPrecipAmountMean+monthThunderMean+monthWeatherMean~monthCrimeMean))
+```
+
+```{r}
+##Daily Totals
+sumRegAnalAllCrimeDayLength <- summary(lm(Data2015$DayLengthPercent~Data2015$DateTotal))
+sumRegAnalAllCrimeMaxTemp <- summary(lm(Data2015$Temp_Max.oF.~Data2015$DateTotal))
+sumRegAnalAllCrimeAvgTemp <- summary(lm(Data2015$Temp_Avg.oF.~Data2015$DateTotal))
+sumRegAnalAllCrimeMinTemp <- summary(lm(Data2015$Temp_Min.oF.~Data2015$DateTotal))
+sumRegAnalAllCrimeSnowAmount <- summary(lm(Data2015$Snow.in.~Data2015$DateTotal))
+sumRegAnalAllCrimePrecipAmount <- summary(lm(Data2015$Precip.in.~Data2015$DateTotal))
+sumRegAnalAllCrimeDayMaxDaily <- summary(lm(Data2015$DayLengthPercent+Data2015$Temp_Max.oF.~Data2015$DateTotal))
+sumRegAnalAllCrimeAllWeatherAvgTempDaily <- summary(lm(Data2015$Temp_Avg.oF.+Data2015$DayLengthPercent+Data2015$Sunny+Data2015$Snow+Data2015$Snow.in.+
+                                                              Data2015$Haze+Data2015$Glaze+Data2015$Hail+Data2015$Sleet+Data2015$Thunder+
+                                                              Data2015$HeavyFog+Data2015$Fog+Data2015$WeatherCondition+Data2015$Wind.mph.+Data2015$Precip.in.~Data2015$DateTotal))
+```
+
+```{r,echo=FALSE}
+##Plot Monthly Average for All Crimes
+plot(month,monthCrimeMean,main="Monthly Averages",xlab="Months",ylab="")
+
+##Plot Monthly Averages for Crime Categories
+par(mfrow=c(3,3),mar=c(4,5,3,1),cex.lab=1.8)
+
+##Plot Monthly Arson Averages
+plot(month,monthArsonMean,main="Arson",xlab="Months",ylab="")
+
+##Plot Monthly Burglary Averages
+plot(month,monthBurglaryMean,main="Burglary",xlab="Months",ylab="")
+
+##Plot Monthly Deceptive Practice Averages
+plot(month,monthDeceptivePracticeMean,main="Deceptive Practice",xlab="Months",ylab="")
+
+##Plot Homicde Monthly Averages
+plot(month,monthHomicideMean,main="Homicide",xlab="Months",ylab="")
+
+##Plot Day Crime Monthly Averages
+plot(month,monthDayMean,main="Day",xlab="Months",ylab="")
+
+##Plot Night Crime Monthly Averages
+plot(month,monthNightMean,main="Night",xlab="Months",ylab="")
+```
+
+## Results
+
+As expected, temperatures and daylength both had a large part in the relationship between crime and weather in the monthly averages and the daily totals. Snow, perhaps not surprisngly, was found to have a relationship with arson. 
+
+```{r,echo=FALSE}
+show(sumRegAnalAllCrimeMaxTempMonth <- summary(lm(monthMaxTempMean~monthCrimeMean)))
+show(sumRegAnalHomicideAvgTempMonth <- summary(lm(monthAvgTempMean~monthHomicideMean)))
+show(sumRegAnalBurglaryMinTempMonth <- summary(lm(monthMinTempMean~monthBurglaryMean)))
+show(sumRegAnalAllCrimeDayLengthMonth <- summary(lm(monthDayLengthMean~monthCrimeMean)))
+show(sumRegAnalArsonSnowMonth <- summary(lm(monthSnowMean~monthArsonMean)))
+show(sumRegAnalAllCrimeDayLength <- summary(lm(Data2015$DayLengthPercent~Data2015$DateTotal)))
+show(sumRegAnalAllCrimeMaxTemp <- summary(lm(Data2015$Temp_Max.oF.~Data2015$DateTotal)))
+show(sumRegAnalArsonSnowAmount <- summary(lm(Data2015$Snow.in.~Data2015$ArsonTotal)))
+```
+
+Other conditions did not have promising results individually. 
+
+```{r,echo=FALSE}
+show(sumRegAnalAllCrimeWeatherMonth <- summary(lm(monthWeatherMean~monthCrimeMean)))
+show(sumRegAnalDeceptivePracticeMonth <- summary(lm(monthSunnyMean~monthDeceptivePracticeMean)))
+show(sumRegAnalAllCrimeWindSpeed <- summary(lm(Data2015$Wind.mph.~Data2015$DateTotal)))
+show(sumRegAnalAllCrimeHeavyFog <- summary(lm(Data2015$HeavyFog~Data2015$DateTotal)))
+show(sumRegAnalAllCrimeSleet <- summary(lm(Data2015$Sleet~Data2015$DateTotal)))
+```
+
+When put together in a multiple regression, daylength and temperatures showed just how important they were.
+
+```{r,echo=FALSE}
+show(sumRegAnalAllCrimeDayMaxMonth <- summary(lm(monthDayLengthMean+monthMaxTempMean~monthCrimeMean)))
+show(sumRegAnalAllCrimeDayAvgMonth <- summary(lm(monthDayLengthMean+monthAvgTempMean~monthCrimeMean)))
+show(sumRegAnalAllCrimeDayMinMonth <- summary(lm(monthDayLengthMean+monthMinTempMean~monthCrimeMean)))
+show(sumRegAnalAllCrimeDayMaxDaily <- summary(lm(Data2015$DayLengthPercent+Data2015$Temp_Max.oF.~Data2015$DateTotal)))
+show(sumRegAnalBurglaryDayAvgDaily <- summary(lm(Data2015$DayLengthPercent+Data2015$Temp_Avg.oF.~Data2015$BurglaryTotal)))
+show(sumRegAnalDayDayMinDaily <- summary(lm(Data2015$DayLengthPercent+Data2015$Temp_Min.oF.~Data2015$DayTotal)))
+```
+
+A large-scale multiple regression analysis done using all weather condition variables, with alternating temperature variables, showed excellent promise as well. However, using all variables seemed to actually degrade the confidence of the analysis as seen in the lower R-squared values.
+
+```{r,echo=FALSE}
+show(sumRegAnalAllCrimeAllWeatherMaxTempMonth <- summary(lm(monthDayLengthMean+monthMaxTempMean+monthSunnyMean+monthSnowAmountMean+monthSnowMean+
+                                                              monthHailMean+monthHazeMean+monthGlazeMean+monthSleetMean+monthWindSpeedMean+
+                                                              monthFogMean+monthHeavyFogMean+monthPrecipAmountMean+monthThunderMean+monthWeatherMean~monthCrimeMean)))
+show(sumRegAnalAllCrimeAllWeatherAvgTempMonth <- summary(lm(monthDayLengthMean+monthAvgTempMean+monthSunnyMean+monthSnowAmountMean+monthSnowMean+
+                                                              monthHailMean+monthHazeMean+monthGlazeMean+monthSleetMean+monthWindSpeedMean+
+                                                              monthFogMean+monthHeavyFogMean+monthPrecipAmountMean+monthThunderMean+monthWeatherMean~monthCrimeMean)))
+show(sumRegAnalAllCrimeAllWeatherMinTempMonth <- summary(lm(monthDayLengthMean+monthMinTempMean+monthSunnyMean+monthSnowAmountMean+monthSnowMean+
+                                                              monthHailMean+monthHazeMean+monthGlazeMean+monthSleetMean+monthWindSpeedMean+
+                                                              monthFogMean+monthHeavyFogMean+monthPrecipAmountMean+monthThunderMean+monthWeatherMean~monthCrimeMean)))
+show(sumRegAnalAllCrimeAllWeatherMaxTempDaily <- summary(lm(Data2015$Temp_Max.oF.+Data2015$DayLengthPercent+Data2015$Sunny+Data2015$Snow+Data2015$Snow.in.+
+                                                              Data2015$Haze+Data2015$Glaze+Data2015$Hail+Data2015$Sleet+Data2015$Thunder+
+                                                              Data2015$HeavyFog+Data2015$Fog+Data2015$WeatherCondition+Data2015$Wind.mph.+Data2015$Precip.in.~Data2015$DateTotal)))
+show(sumRegAnalAllCrimeAllWeatherAvgTempDaily <- summary(lm(Data2015$Temp_Avg.oF.+Data2015$DayLengthPercent+Data2015$Sunny+Data2015$Snow+Data2015$Snow.in.+
+                                                              Data2015$Haze+Data2015$Glaze+Data2015$Hail+Data2015$Sleet+Data2015$Thunder+
+                                                              Data2015$HeavyFog+Data2015$Fog+Data2015$WeatherCondition+Data2015$Wind.mph.+Data2015$Precip.in.~Data2015$DateTotal)))
+show(sumRegAnalAllCrimeAllWeatherMinTempDaily <- summary(lm(Data2015$Temp_Min.oF.+Data2015$DayLengthPercent+Data2015$Sunny+Data2015$Snow+Data2015$Snow.in.+
+                                                              Data2015$Haze+Data2015$Glaze+Data2015$Hail+Data2015$Sleet+Data2015$Thunder+
+                                                              Data2015$HeavyFog+Data2015$Fog+Data2015$WeatherCondition+Data2015$Wind.mph.+Data2015$Precip.in.~Data2015$DateTotal)))
+```
+
+## Implications
+
+This study's results have some implications for public safety officials and researchers. 
+
+While the regression analyses show that the monthly trends are linked to weather conditions, the analyses done on daily totals do not have such a strong relationship. This means that while overall trends, such as warm months or snow storms, will affect criminal activity, daily differences do not.
+
+## Conclusions
+
+While not a complete success, this study did show that weather conditions play an impact on criminal activity. It did show that daily criminal activity is somewhat affected by weather conditions, but also showed that the relationship between monthly weather patterns and monthly criminal activity is extremely strong. 
